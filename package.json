@@ -1,0 +1,22 @@
+{
+  "name": "smart_office_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./app.js",
+    "dev": "nodemon ./app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "moment": "^2.29.4",
+    "puppeteer": "^19.9.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.7"
+  }
+}
