@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const moment = require('moment');
-const { LoginService } = require('./LoginService');
-const { ReserveService } = require('./ReserveService');
+const { LoginService } = require('./services/LoginService');
+const { ReserveService } = require('./services/ReserveService');
 const rl = require('node:readline/promises').createInterface({
   input: process.stdin,
   output: process.stdout,
