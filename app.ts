@@ -1,12 +1,16 @@
-const puppeteer = require('puppeteer');
-const moment = require('moment');
-const { LoginService } = require('./services/LoginService');
-const { ReserveService } = require('./services/ReserveService');
-const rl = require('node:readline/promises').createInterface({
+import puppeteer, { Browser, Page } from 'puppeteer';
+import LoginService from './services/LoginService';
+import ReserveService from './services/ReserveService';
+import Token from './services/Token';
+import * as readline from 'node:readline/promises';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+const cout = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-require('dotenv').config();
 
 const init = async () => {
   const browser = await puppeteer.launch({
@@ -14,13 +18,30 @@ const init = async () => {
     userDataDir: './browser_profile',
   });
 
-  const loginService = new LoginService(40, rl);
+  const loginService = new LoginService(40, cout);
   const reserveService = new ReserveService();
-  const bot = new Bot(browser, loginService, reserveService, process.env.URL);
+  const bot = new Bot(
+    browser,
+    loginService,
+    reserveService,
+    process.env.URL ?? ''
+  );
 };
 
 class Bot {
-  constructor(browser, loginService, reserveService, url) {
+  private browser: Browser;
+  private page?: Page;
+
+  private loginService: LoginService;
+  private reserveService: ReserveService;
+  private url: string;
+
+  constructor(
+    browser: Browser,
+    loginService: LoginService,
+    reserveService: ReserveService,
+    url: string
+  ) {
     this.browser = browser;
     this.loginService = loginService;
     this.reserveService = reserveService;
@@ -31,17 +52,19 @@ class Bot {
 
   async init() {
     this.page = await this.browser.newPage();
-    this.reserveService.setPageResponseListener(this.page);
+
+    const token = new Token(this.page);
+    token.setPageResponseListener();
 
     await this.page.goto(this.url);
 
     try {
       const microsoftButton = await this.page.waitForSelector(
         'button.btnWhite',
-        { timeout: 3000 }
+        { timeout: 5000 }
       );
 
-      await microsoftButton.click();
+      await microsoftButton?.click();
     } catch (e) {
       await this.reserveService.setReservation(this.page);
     }

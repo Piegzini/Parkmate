@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./app.js",
-    "dev": "nodemon ./app.js"
+    "start": "node app.ts",
+    "dev": "nodemon app.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,12 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "prettier": "^2.8.7"
+    "@types/node": "^18.16.0",
+    "@types/puppeteer": "^7.0.4",
+    "prettier": "^2.8.7",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.4"
   }
 }

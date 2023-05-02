@@ -1,6 +1,11 @@
+import * as readline from 'readline';
+
 require('dotenv').config();
 
 class LoginService {
+  rl: readline;
+  delay: number;
+
   constructor(passingDelay, readline) {
     this.rl = readline;
     this.delay = passingDelay;
@@ -41,4 +46,4 @@ class LoginService {
   }
 }
 
-module.exports = { LoginService };
+export default LoginService;

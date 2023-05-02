@@ -1,6 +1,11 @@
-const moment = require('moment');
+import moment from 'moment';
 
 class ReserveService {
+  private accessToken: string;
+  private weekDaysToBook: number[];
+  private startHour: string;
+  private endHour: string;
+
   constructor() {
     this.accessToken = '';
     this.weekDaysToBook = [1, 2, 3, 4];
@@ -8,32 +13,7 @@ class ReserveService {
     this.endHour = 'T17:00:36+02:00';
   }
 
-  setPageResponseListener(page) {
-    page.on('response', this.findToken);
-  }
-  removePageResponseListener(page) {
-    page.off('response', this.findToken);
-  }
-
-  findToken = async (response) => {
-    const url = response.url();
-    const { 'content-type': contentType, 'content-length': contentLength } =
-      response.headers();
-
-    const loginUrlPattern = new RegExp('atman/login');
-
-    const isRequestPayload = contentType && contentLength !== 0;
-    const isLoginResponse = loginUrlPattern.test(url);
-
-    if (isLoginResponse && isRequestPayload) {
-      const { accessToken } = await response.json();
-      this.accessToken = accessToken;
-    }
-  };
-
   getReservationDetails(startTime, endTime, parkingPlace) {
-    // startTime: '2023-04-16T23:15:36+02:00',
-    // endTime: '2023-04-16T23:30:36+02:00',
     return {
       emailAddress: process.env.EMAIL,
       dates: [
@@ -101,4 +81,4 @@ class ReserveService {
   }
 }
 
-module.exports = { ReserveService };
+export default ReserveService;
