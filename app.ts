@@ -1,95 +1,30 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
-import LoginService from './services/LoginService';
-import ReserveService from './services/ReserveService';
-import Token from './services/Token';
-import * as readline from 'node:readline/promises';
-import * as dotenv from 'dotenv';
+import puppeteer, { Browser } from 'puppeteer';
+import puppeteerLaunchOptions from './config/browser.config.js';
+import logger from './config/logger.config.js';
+import ReserveService from './services/ReservationService.js';
+import { createInterface } from 'node:readline/promises';
+import LoginService from './services/LoginService.js';
+import Bot from './components/Bot.js';
+const app = async () => {
+  let browser: Browser;
 
-dotenv.config();
-
-const cout = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-const init = async () => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    userDataDir: './browser_profile',
+  const consoleInterface = createInterface({
+    input: process.stdin,
+    output: process.stdout,
   });
-
-  const loginService = new LoginService(40, cout);
+  const loginService = new LoginService(consoleInterface);
   const reserveService = new ReserveService();
-  const bot = new Bot(
-    browser,
-    loginService,
-    reserveService,
-    process.env.URL ?? ''
-  );
+
+  try {
+    browser = await puppeteer.launch(puppeteerLaunchOptions);
+    logger.info('Puppeteer browser initialized successfully.');
+  } catch (error: any) {
+    logger.error(error.message);
+  }
+
+  // @ts-ignore
+  const bot = new Bot(browser, loginService, reserveService);
+  bot.init().catch((error: any) => logger.error(error.messages));
 };
 
-class Bot {
-  private browser: Browser;
-  private page?: Page;
-
-  private loginService: LoginService;
-  private reserveService: ReserveService;
-  private url: string;
-
-  constructor(
-    browser: Browser,
-    loginService: LoginService,
-    reserveService: ReserveService,
-    url: string
-  ) {
-    this.browser = browser;
-    this.loginService = loginService;
-    this.reserveService = reserveService;
-    this.url = url;
-
-    this.init().then();
-  }
-
-  async init() {
-    this.page = await this.browser.newPage();
-
-    const token = new Token(this.page);
-    token.setPageResponseListener();
-
-    await this.page.goto(this.url);
-
-    try {
-      const microsoftButton = await this.page.waitForSelector(
-        'button.btnWhite',
-        { timeout: 5000 }
-      );
-
-      await microsoftButton?.click();
-    } catch (e) {
-      await this.reserveService.setReservation(this.page);
-    }
-
-    await this.page.waitForTimeout(2000);
-
-    const variant = await this.page.evaluate(this.checkVariant);
-
-    switch (variant) {
-      case 'login':
-        await this.loginService.signIn(this.page);
-        break;
-      case 'auth':
-        await this.loginService.auth();
-        break;
-    }
-  }
-
-  checkVariant() {
-    if (document.querySelector('input[type=tel]')) return 'auth';
-
-    if (document.querySelector('input[type=email]')) return 'login';
-
-    return 'reserve';
-  }
-}
-
-init();
+app();

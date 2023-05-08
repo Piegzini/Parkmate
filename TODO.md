@@ -7,3 +7,8 @@
 - emails information for unfinished reservations
 - unit tests
 - rewrite to type script
+
+### [ 03.05.2023 ]
+
+- ~~rewrite to type script~~
+- ~~logger, and log file~~

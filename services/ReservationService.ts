@@ -1,19 +1,23 @@
 import moment from 'moment';
+import { Page } from 'puppeteer';
+import logger from '../config/logger.config.js';
 
-class ReserveService {
-  private accessToken: string;
+class ReservationService {
   private weekDaysToBook: number[];
-  private startHour: string;
-  private endHour: string;
+  readonly startHour: string;
+  readonly endHour: string;
 
   constructor() {
-    this.accessToken = '';
-    this.weekDaysToBook = [1, 2, 3, 4];
+    this.weekDaysToBook = [1, 2, 3, 4, 5];
     this.startHour = 'T08:00:36+02:00';
     this.endHour = 'T17:00:36+02:00';
   }
 
-  getReservationDetails(startTime, endTime, parkingPlace) {
+  getReservationDetails(
+    startTime: string,
+    endTime: string,
+    parkingPlace: number
+  ) {
     return {
       emailAddress: process.env.EMAIL,
       dates: [
@@ -31,21 +35,31 @@ class ReserveService {
     };
   }
 
-  async setReservation(page) {
+  async setReservation(page: Page, token: string) {
     const dates = this.getReservationDates();
 
     for (const date of dates) {
+      logger.info('Preparing a request for reservations for ' + date);
       const body = this.getReservationDetails(
         date + this.startHour,
         date + this.endHour,
         514
       );
 
-      await page.evaluate(this.sendRequest, this.accessToken, body);
+      try {
+        const res = await page.evaluate(this.sendRequest, token, body);
+
+        if (res.status !== 200) {
+          throw new Error(`${res.error} ${res.message ?? ''}`);
+        }
+        logger.info('Successfully created a reservation for ' + date);
+      } catch (error: any) {
+        logger.error(error.message);
+      }
     }
   }
 
-  async sendRequest(token, body) {
+  async sendRequest(token: string, body: any) {
     let response = await fetch(
       'https://smartoffice-api.ringieraxelspringer.pl/atman/api/2.0/create-event',
       {
@@ -58,11 +72,7 @@ class ReserveService {
       }
     );
 
-    if (!response.ok) {
-      //error handling
-    }
-
-    response = await response.json();
+    return await response.json();
   }
 
   getReservationDates() {
@@ -81,4 +91,4 @@ class ReserveService {
   }
 }
 
-export default ReserveService;
+export default ReservationService;
